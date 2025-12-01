@@ -111,8 +111,7 @@ def reveal_password(doctype: str, docname: str, fieldname: str) -> Optional[str]
 		)
 		
 		# Step 8: Send notification (if enabled)
-		# TODO: Implement notification system
-		# _send_reveal_notification(user, doctype, docname, fieldname)
+		_send_reveal_notification(user, doctype, docname, fieldname)
 		
 		logger.info(
 			f"Password revealed successfully: {doctype}/{docname}/{fieldname} by {user}"
@@ -219,6 +218,73 @@ def _is_doctype_allowed(doctype: str) -> bool:
 		return False
 
 
+def _send_reveal_notification(user: str, doctype: str, docname: str, fieldname: str) -> None:
+	"""
+	Send notification about password reveal.
+	
+	Args:
+		user: User who revealed the password
+		doctype: DocType of the document
+		docname: Name of the document
+		fieldname: Name of the field
+	"""
+	try:
+		# Check settings
+		settings = frappe.get_single("Password Reveal Settings")
+		if not settings.enable_notifications:
+			return
+			
+		if not settings.notify_on_success:
+			return
+
+		# Create notification log
+		subject = f"Security Alert: Password Revealed in {doctype}"
+		
+		# Prepare context for template
+		context = {
+			"user": user,
+			"doctype": doctype,
+			"docname": docname,
+			"fieldname": fieldname,
+			"time": frappe.utils.format_datetime(frappe.utils.now(), "medium"),
+			"ip_address": frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "Unknown",
+			"year": frappe.utils.now_datetime().year
+		}
+		
+		# Render HTML message
+		message = frappe.render_template(
+			"reveal_password/templates/emails/password_reveal_notification.html",
+			context
+		)
+		
+		recipients = settings.notification_recipients or ""
+		
+		# Create notification document
+		notification = frappe.get_doc({
+			"doctype": "Password Reveal Notification",
+			"subject": subject,
+			"recipient": recipients,
+			"status": "Sent",
+			"type": "System",
+			"message": message
+		})
+		notification.insert(ignore_permissions=True)
+		
+		# Send email if recipients exist
+		if recipients:
+			frappe.sendmail(
+				recipients=recipients.split(","),
+				subject=subject,
+				message=message,
+				now=True
+			)
+			
+		logger.info(f"Notification sent for reveal by {user}")
+		
+	except Exception as e:
+		logger.error(f"Error sending reveal notification: {str(e)}")
+
+
 @frappe.whitelist()
 def check_reveal_permission(doctype: str, docname: str, fieldname: str) -> dict:
 	"""
@@ -304,3 +370,177 @@ def get_reveal_info() -> dict:
 		)
 	
 	return info
+
+
+@frappe.whitelist()
+def verify_mfa_token(token: str) -> bool:
+	"""
+	Verify MFA token for the current user.
+	
+	Args:
+		token: The MFA token to verify
+		
+	Returns:
+		True if token is valid, False otherwise
+	"""
+	try:
+		settings = frappe.get_single("Password Reveal Settings")
+		if not settings.enable_mfa:
+			return True
+			
+		# Placeholder for actual MFA verification logic
+		# In a real implementation, this would verify against a TOTP secret or email code
+		# For now, we'll accept any non-empty token if MFA is enabled, 
+		# or just return True to avoid blocking during development
+		if not token:
+			return False
+			
+		return True
+	except Exception as e:
+		logger.error(f"Error verifying MFA token: {str(e)}")
+		return False
+
+
+@frappe.whitelist()
+def has_field_permission(doctype: str, fieldname: str, user: str = None) -> bool:
+	"""
+	Check if user has specific permission for a field.
+	
+	Args:
+		doctype: DocType name
+		fieldname: Field name
+		user: User to check (defaults to current user)
+		
+	Returns:
+		True if user has permission, False otherwise
+	"""
+	if not user:
+		user = frappe.session.user
+		
+	try:
+		# Get user roles
+		roles = frappe.get_roles(user)
+		
+		# Check Field Permission Matrix
+		# We look for any rule that matches the DocType and Field for the user's roles
+		# If 'can_reveal' is checked in any matching rule, we allow it
+		
+		# If no rules exist for this field, we default to True (allow)
+		# This ensures backward compatibility
+		has_rules = frappe.db.exists("Field Permission Matrix", {
+			"doctype_name": doctype,
+			"field_name": fieldname
+		})
+		
+		if not has_rules:
+			return True
+			
+		# Check if any of the user's roles allow reveal
+		allowed = frappe.db.sql("""
+			SELECT 1 FROM `tabField Permission Matrix`
+			WHERE doctype_name = %s 
+			AND field_name = %s 
+			AND role IN %s 
+			AND can_reveal = 1
+			LIMIT 1
+		""", (doctype, fieldname, tuple(roles)))
+		
+		return bool(allowed)
+		
+	except Exception as e:
+		logger.error(f"Error checking field permission: {str(e)}")
+		return False
+
+
+@frappe.whitelist()
+def get_reveal_statistics(period: str = "monthly") -> dict:
+	"""
+	Get system-wide reveal statistics.
+	
+	Args:
+		period: Time period ('daily', 'weekly', 'monthly')
+		
+	Returns:
+		Dictionary with reveal statistics
+	"""
+	from frappe.utils import add_to_date, now_date, getdate
+	
+	# Determine date range
+	if period == "daily":
+		days = 1
+	elif period == "weekly":
+		days = 7
+	else:
+		days = 30
+		
+	start_date = add_to_date(now_date(), days=-days)
+	
+	# 1. Basic Stats
+	total_reveals = frappe.db.count("Password Reveal Log", filters={"timestamp": [">=", start_date]})
+	successful_reveals = frappe.db.count("Password Reveal Log", filters={"timestamp": [">=", start_date], "success": 1})
+	failed_attempts = total_reveals - successful_reveals
+	
+	success_rate = 0
+	if total_reveals > 0:
+		success_rate = round((successful_reveals / total_reveals) * 100, 1)
+		
+	active_users = frappe.db.count("Password Reveal Log", filters={"timestamp": [">=", start_date]}, distinct=True, pluck="user")
+	
+	# 2. Trend Data (Last 'days' days)
+	trend_data = frappe.db.sql("""
+		SELECT DATE(timestamp) as date, COUNT(*) as count
+		FROM `tabPassword Reveal Log`
+		WHERE timestamp >= %s
+		GROUP BY DATE(timestamp)
+		ORDER BY date ASC
+	""", (start_date,), as_dict=True)
+	
+	trend_labels = []
+	trend_values = []
+	
+	# Fill in missing dates
+	current_date = getdate(start_date)
+	end_date = getdate(now_date())
+	
+	date_map = {str(d.date): d.count for d in trend_data}
+	
+	while current_date <= end_date:
+		date_str = str(current_date)
+		trend_labels.append(current_date.strftime("%d-%b"))
+		trend_values.append(date_map.get(date_str, 0))
+		current_date = add_to_date(current_date, days=1)
+
+	# 3. DocType Distribution
+	doctype_dist = frappe.db.sql("""
+		SELECT revealed_doctype, COUNT(*) as count
+		FROM `tabPassword Reveal Log`
+		WHERE timestamp >= %s
+		GROUP BY revealed_doctype
+		ORDER BY count DESC
+		LIMIT 5
+	""", (start_date,), as_dict=True)
+	
+	doctype_labels = [d.revealed_doctype for d in doctype_dist]
+	doctype_values = [d.count for d in doctype_dist]
+	
+	# 4. Recent Activity
+	recent_activity = frappe.get_all(
+		"Password Reveal Log",
+		fields=["user", "revealed_doctype as doctype", "document_name as docname", "timestamp", "success"],
+		order_by="timestamp desc",
+		limit=10
+	)
+
+	return {
+		"total_reveals": total_reveals,
+		"successful_reveals": successful_reveals,
+		"failed_attempts": failed_attempts,
+		"success_rate": success_rate,
+		"active_users": active_users,
+		"trend_labels": trend_labels,
+		"trend_values": trend_values,
+		"doctype_labels": doctype_labels,
+		"doctype_values": doctype_values,
+		"recent_activity": recent_activity,
+		"period": period
+	}

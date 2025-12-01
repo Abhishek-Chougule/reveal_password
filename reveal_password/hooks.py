@@ -49,9 +49,9 @@ app_include_js = "/assets/reveal_password/js/reveal_password_enhanced.js"
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
-doctype_js = {
-    "*": "public/js/reveal_password.js"
-}
+# doctype_js = {
+#     "*": "public/js/reveal_password.js"
+# }
 
 # Svg Icons
 # ------------------
