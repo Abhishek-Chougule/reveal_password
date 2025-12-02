@@ -373,16 +373,17 @@ def get_reveal_info() -> dict:
 
 
 @frappe.whitelist()
-def verify_mfa_token(token: str) -> bool:
+def verify_mfa_token(token: str, user: str = None) -> bool:
 	"""
-	Verify MFA token for the current user.
+	Verify MFA token using TOTP or backup code.
 	
 	Args:
-		token: The MFA token to verify
+		token: The MFA token or backup code to verify
+		user: User to verify for (defaults to current user)
 		
 	Returns:
 		True if token is valid, False otherwise
-	"""
+	
 	try:
 		settings = frappe.get_single("Password Reveal Settings")
 		if not settings.enable_mfa:

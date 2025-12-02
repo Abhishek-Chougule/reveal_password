@@ -1,0 +1,23 @@
+{
+    "content": null,
+    "creation": "2025-12-02 10:40:00.000000",
+    "docstatus": 0,
+    "doctype": "Page",
+    "idx": 0,
+    "modified": "2025-12-02 10:40:00.000000",
+    "modified_by": "Administrator",
+    "module": "Reveal Password",
+    "name": "mfa-setup",
+    "owner": "Administrator",
+    "page_name": "mfa-setup",
+    "roles": [
+        {
+            "role": "All"
+        }
+    ],
+    "script": null,
+    "standard": "Yes",
+    "style": null,
+    "system_page": 0,
+    "title": "MFA Setup"
+}

@@ -91,7 +91,7 @@ app_include_js = "/assets/reveal_password/js/reveal_password_enhanced.js"
 # ------------
 
 # before_install = "reveal_password.install.before_install"
-# after_install = "reveal_password.install.after_install"
+after_install = "reveal_password.install.after_install"
 
 # Uninstallation
 # ------------
@@ -148,23 +148,12 @@ app_include_js = "/assets/reveal_password/js/reveal_password_enhanced.js"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"reveal_password.tasks.all"
-# 	],
-# 	"daily": [
-# 		"reveal_password.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"reveal_password.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"reveal_password.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"reveal_password.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"reveal_password.utils.password_rotation.check_and_rotate_passwords",
+		"reveal_password.reveal_password.doctype.temporary_reveal_link.temporary_reveal_link.cleanup_expired_links"
+	]
+}
 
 # Testing
 # -------
