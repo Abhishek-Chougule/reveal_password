@@ -90,8 +90,8 @@ app_include_js = "/assets/reveal_password/js/reveal_password_enhanced.js"
 # Installation
 # ------------
 
-# before_install = "reveal_password.install.before_install"
-after_install = "reveal_password.install.after_install"
+before_install = "reveal_password.install.before_install"
+# after_install = "reveal_password.install.after_install"
 
 # Uninstallation
 # ------------

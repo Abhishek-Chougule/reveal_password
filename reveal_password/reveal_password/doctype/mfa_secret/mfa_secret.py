@@ -3,11 +3,9 @@
 
 import frappe
 from frappe.model.document import Document
-import pyotp
-import qrcode
+from frappe.utils import now
 import io
 import base64
-from frappe.utils import now
 
 
 class MFASecret(Document):
@@ -15,6 +13,7 @@ class MFASecret(Document):
 		"""Generate TOTP secret and QR code before inserting."""
 		if not self.secret_key:
 			# Generate a random secret key
+			import pyotp
 			self.secret_key = pyotp.random_base32()
 		
 		if not self.setup_date:
@@ -25,6 +24,12 @@ class MFASecret(Document):
 	
 	def generate_qr_code(self):
 		"""Generate QR code for TOTP setup."""
+		if not self.secret_key:
+			return
+
+		import pyotp
+		import qrcode
+
 		# Create TOTP URI
 		totp = pyotp.TOTP(self.secret_key)
 		uri = totp.provisioning_uri(
@@ -61,6 +66,7 @@ class MFASecret(Document):
 		if not self.is_enabled:
 			return False
 		
+		import pyotp
 		totp = pyotp.TOTP(self.secret_key)
 		is_valid = totp.verify(token, valid_window=1)  # Allow 30 seconds window
 		

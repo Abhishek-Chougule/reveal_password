@@ -14,7 +14,7 @@ def after_install():
 	install_dependencies()
 
 def before_install():
-	pass
+	install_dependencies()
 
 def install_dependencies():
 	"""
