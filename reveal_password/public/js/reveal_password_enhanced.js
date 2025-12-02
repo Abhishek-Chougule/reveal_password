@@ -21,7 +21,7 @@ class PasswordRevealManager {
 		this.observers = new Map();
 		this.CACHE_TTL = 60000; // 1 minute
 		this.AUTO_HIDE_DELAY = 30000; // 30 seconds
-		
+
 		this.init();
 	}
 
@@ -48,7 +48,7 @@ class PasswordRevealManager {
 			const response = await frappe.call({
 				method: "reveal_password.api.get_allowed_doctypes"
 			});
-			
+
 			if (response.message && Array.isArray(response.message)) {
 				response.message.forEach(dt => this.allowedDoctypes.add(dt));
 				console.log(`Loaded ${this.allowedDoctypes.size} allowed DocTypes`);
@@ -85,13 +85,20 @@ class PasswordRevealManager {
 			this.enhancePasswordFields(frm);
 		});
 
-		observer.observe(frm.wrapper[0], {
-			childList: true,
-			subtree: true
-		});
+		const targetNode = frm.wrapper && frm.wrapper[0];
+		if (targetNode) {
+			observer.observe(targetNode, {
+				childList: true,
+				subtree: true
+			});
+			this.observers.set(observerKey, observer);
+		} else {
+			// If wrapper is not available, just run enhancement once
+			console.warn('Password Reveal: Form wrapper not found for observation');
+		}
 
-		this.observers.set(observerKey, observer);
-		
+
+
 		// Initial enhancement
 		this.enhancePasswordFields(frm);
 	}
@@ -115,14 +122,14 @@ class PasswordRevealManager {
 	enhancePasswordField(frm, field) {
 		const $wrapper = field.$wrapper;
 		const $input = $wrapper.find(`input[data-fieldname="${field.df.fieldname}"]`);
-		
+
 		if (!$input.length || $wrapper.find('.password-reveal-controls').length) {
 			return;
 		}
 
 		// Create control panel
 		const $controls = this.createControlPanel(frm, field, $input);
-		
+
 		// Insert after input
 		const $inputWrapper = $input.parent();
 		$inputWrapper.css('position', 'relative');
@@ -187,11 +194,11 @@ class PasswordRevealManager {
 					revealedPassword = password;
 					isRevealed = true;
 					$copyBtn.show();
-					
+
 					if (password) {
 						this.showPasswordStrength($controls, password);
 					}
-					
+
 					// Schedule auto-hide
 					autoHideTimeout = setTimeout(() => {
 						this.hidePassword($input, $revealBtn, $copyBtn, $controls);
@@ -220,7 +227,7 @@ class PasswordRevealManager {
 		// Check cache first
 		const cacheKey = `${frm.doctype}:${frm.docname}:${field.df.fieldname}`;
 		const cached = this.revealCache.get(cacheKey);
-		
+
 		if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
 			$input.attr('type', 'text').val(cached.password);
 			this.updateButtonState($btn, true);
@@ -242,7 +249,7 @@ class PasswordRevealManager {
 
 			if (response.message !== undefined) {
 				const password = response.message;
-				
+
 				// Update cache
 				this.revealCache.set(cacheKey, {
 					password: password,
@@ -260,12 +267,12 @@ class PasswordRevealManager {
 			}
 		} catch (error) {
 			console.error('Password reveal failed:', error);
-			
+
 			let errorMessage = __('Failed to reveal password');
 			if (error.message) {
 				errorMessage = error.message;
 			}
-			
+
 			this.showAlert(errorMessage, 'red', 5);
 			return null;
 		} finally {
@@ -289,7 +296,7 @@ class PasswordRevealManager {
 	updateButtonState($btn, isRevealed) {
 		const iconHref = isRevealed ? '#icon-hide' : '#icon-unhide';
 		const text = isRevealed ? __('Hide') : __('Reveal');
-		
+
 		$btn.find('use').attr('href', iconHref);
 		$btn.find('.btn-text').text(text);
 		$btn.removeClass('btn-primary').addClass(isRevealed ? 'btn-secondary' : 'btn-primary');
@@ -318,14 +325,14 @@ class PasswordRevealManager {
 			this.showAlert(__('Password copied to clipboard'), 'green', 2);
 		} catch (err) {
 			console.error('Copy failed:', err);
-			
+
 			// Fallback method
 			const $temp = $('<textarea>');
 			$('body').append($temp);
 			$temp.val(text).select();
 			document.execCommand('copy');
 			$temp.remove();
-			
+
 			this.showAlert(__('Password copied to clipboard'), 'green', 2);
 		}
 	}
@@ -352,12 +359,12 @@ class PasswordRevealManager {
 	 */
 	calculatePasswordStrength(password) {
 		let score = 0;
-		
+
 		// Length
 		if (password.length >= 8) score += 20;
 		if (password.length >= 12) score += 20;
 		if (password.length >= 16) score += 10;
-		
+
 		// Character types
 		if (/[a-z]/.test(password)) score += 15;
 		if (/[A-Z]/.test(password)) score += 15;
@@ -387,7 +394,7 @@ class PasswordRevealManager {
 			// Ctrl+Shift+P to reveal
 			if (e.ctrlKey && e.shiftKey && e.key === 'P') {
 				e.preventDefault();
-				
+
 				const $focused = $(document.activeElement);
 				if ($focused.is('input[type="password"]')) {
 					const controls = $focused.data('reveal-controls');

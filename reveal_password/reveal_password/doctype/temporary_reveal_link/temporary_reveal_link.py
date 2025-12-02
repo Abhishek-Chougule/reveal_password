@@ -256,12 +256,26 @@ def log_link_access(link, accessed_by, success=True, error=None):
 		error: Error message if failed
 	"""
 	try:
-		# Add to access logs child table if it exists
-		# For now, just log to system
-		frappe.logger().info(
-			f"Link access: {link.name} by {accessed_by} - "
-			f"{'Success' if success else 'Failed: ' + (error or 'Unknown error')}"
-		)
+		# Add to access logs child table
+		link.append("access_logs", {
+			"accessed_at": now(),
+			"accessed_by": accessed_by,
+			"ip_address": accessed_by, # Assuming accessed_by is IP for now
+			"success": 1 if success else 0,
+			"error_message": error
+		})
+		
+		# We need to save the link doc to persist the child table row
+		# But we must be careful not to trigger recursion or validation errors if called from within a save
+		# Since this is usually called after access, it should be fine.
+		# However, if called from access_temporary_link which saves usage, we might want to avoid double save.
+		# In access_temporary_link, we call increment_usage which saves.
+		# Let's check if we can just append and let the caller save, or save here.
+		
+		# Since access_temporary_link calls this *after* increment_usage (which saves),
+		# we need to save again.
+		link.save(ignore_permissions=True)
+		
 	except Exception as e:
 		frappe.log_error(f"Error logging link access: {str(e)}")
 
