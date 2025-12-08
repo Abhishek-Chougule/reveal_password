@@ -10,6 +10,23 @@ Reveal Password is a comprehensive, enterprise-grade security solution for Frapp
 
 ---
 
+## How to Use
+
+- **Trusted User**: Open Trusted User Doctype -> New -> Enable and add user -> Save
+- **Reveal Allowed Doctypes**: Open Reveal Allowed Doctypes -> New -> add doctype for which you want to use reveal password -> Save
+- **Workspace -> Reveal Password**: here you can find dashboard, analytics and other shortcuts
+
+
+<img width="1284" height="816" alt="Screenshot 2025-12-08 152637" src="https://github.com/user-attachments/assets/fe8a68e1-aadc-4d00-a766-e7c87f0323e0" />
+
+<img width="1288" height="617" alt="Screenshot 2025-12-08 154512" src="https://github.com/user-attachments/assets/d328457d-dc3f-465b-ba38-8499fd736740" />
+
+<img width="1157" height="915" alt="Screenshot 2025-12-08 154621" src="https://github.com/user-attachments/assets/72b8b545-467b-4c63-bff0-7e0a0422a393" />
+
+
+
+
+
 ## Key Features
 
 ### Core Security
