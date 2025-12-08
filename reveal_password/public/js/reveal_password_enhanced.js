@@ -152,6 +152,7 @@ class PasswordRevealManager {
 					<svg class="icon icon-sm">
 						<use href="#icon-copy"></use>
 					</svg>
+					<span class="btn-text">${__('Copy')}</span>
 				</button>
 				<div class="password-strength" style="display: none;">
 					<div class="strength-bar-container">
