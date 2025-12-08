@@ -1,26 +1,26 @@
 frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
-    let page = frappe.ui.make_app_page({
-        parent: wrapper,
-        title: 'Security Dashboard',
-        single_column: true
-    });
+	let page = frappe.ui.make_app_page({
+		parent: wrapper,
+		title: 'Security Dashboard',
+		single_column: true
+	});
 
-    // Add action buttons
-    page.set_primary_action('Export Report', () => export_security_report(), 'download');
-    page.set_secondary_action('Refresh', () => load_dashboard(), 'refresh');
+	// Add action buttons
+	page.set_primary_action('Export Report', () => export_security_report(), 'download');
+	page.set_secondary_action('Refresh', () => load_dashboard(), 'refresh');
 
-    // Add filter
-    page.add_field({
-        fieldname: 'time_range',
-        label: __('Time Range'),
-        fieldtype: 'Select',
-        options: ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
-        default: 'Last 7 Days',
-        change: () => load_dashboard()
-    });
+	// Add filter
+	page.add_field({
+		fieldname: 'time_range',
+		label: __('Time Range'),
+		fieldtype: 'Select',
+		options: ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
+		default: 'Last 7 Days',
+		change: () => load_dashboard()
+	});
 
-    // Main container
-    $(wrapper).find('.layout-main-section').append(`
+	// Main container
+	$(wrapper).find('.layout-main-section').append(`
 		<div class="security-dashboard-container" style="padding: 20px;">
 			<!-- Alert Section -->
 			<div id="alerts-section" style="margin-bottom: 30px;"></div>
@@ -29,28 +29,28 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 			<div class="row" style="margin-bottom: 30px;">
 				<div class="col-md-3">
 					<div class="metric-card" id="total-sessions">
-						<div class="metric-icon">📊</div>
+						<div class="metric-icon"><i class="fa fa-chart-bar"></i></div>
 						<div class="metric-value">0</div>
 						<div class="metric-label">Total Sessions</div>
 					</div>
 				</div>
 				<div class="col-md-3">
 					<div class="metric-card" id="suspicious-count">
-						<div class="metric-icon">⚠️</div>
+						<div class="metric-icon"><i class="fa fa-exclamation-triangle"></i></div>
 						<div class="metric-value">0</div>
 						<div class="metric-label">Suspicious Activities</div>
 					</div>
 				</div>
 				<div class="col-md-3">
 					<div class="metric-card" id="unique-users">
-						<div class="metric-icon">👥</div>
+						<div class="metric-icon"><i class="fa fa-users"></i></div>
 						<div class="metric-value">0</div>
 						<div class="metric-label">Active Users</div>
 					</div>
 				</div>
 				<div class="col-md-3">
 					<div class="metric-card" id="avg-anomaly">
-						<div class="metric-icon">🎯</div>
+						<div class="metric-icon"><i class="fa fa-bullseye"></i></div>
 						<div class="metric-value">0</div>
 						<div class="metric-label">Avg Anomaly Score</div>
 					</div>
@@ -101,8 +101,8 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 		</div>
 	`);
 
-    // Add custom CSS
-    frappe.dom.set_style(`
+	// Add custom CSS
+	frappe.dom.set_style(`
 		.metric-card {
 			background: var(--card-bg);
 			border: 1px solid var(--border-color);
@@ -158,104 +158,104 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 		}
 	`);
 
-    function load_dashboard() {
-        const time_range = page.fields_dict.time_range.get_value();
-        const days = get_days_from_range(time_range);
+	function load_dashboard() {
+		const time_range = page.fields_dict.time_range.get_value();
+		const days = get_days_from_range(time_range);
 
-        // Load security metrics
-        frappe.call({
-            method: 'reveal_password.reveal_password.page.security_dashboard.security_dashboard.get_security_metrics',
-            args: { days: days },
-            callback: function (r) {
-                if (r.message) {
-                    render_dashboard(r.message);
-                }
-            }
-        });
-    }
+		// Load security metrics
+		frappe.call({
+			method: 'reveal_password.reveal_password.page.security_dashboard.security_dashboard.get_security_metrics',
+			args: { days: days },
+			callback: function (r) {
+				if (r.message) {
+					render_dashboard(r.message);
+				}
+			}
+		});
+	}
 
-    function get_days_from_range(range) {
-        const map = {
-            'Last 24 Hours': 1,
-            'Last 7 Days': 7,
-            'Last 30 Days': 30,
-            'Last 90 Days': 90
-        };
-        return map[range] || 7;
-    }
+	function get_days_from_range(range) {
+		const map = {
+			'Last 24 Hours': 1,
+			'Last 7 Days': 7,
+			'Last 30 Days': 30,
+			'Last 90 Days': 90
+		};
+		return map[range] || 7;
+	}
 
-    function render_dashboard(data) {
-        // Render alerts
-        render_alerts(data.alerts);
+	function render_dashboard(data) {
+		// Render alerts
+		render_alerts(data.alerts);
 
-        // Update metrics
-        $('#total-sessions .metric-value').text(data.total_sessions);
-        $('#suspicious-count .metric-value').text(data.suspicious_count);
-        $('#unique-users .metric-value').text(data.unique_users);
-        $('#avg-anomaly .metric-value').text(data.avg_anomaly_score.toFixed(1));
+		// Update metrics
+		$('#total-sessions .metric-value').text(data.total_sessions);
+		$('#suspicious-count .metric-value').text(data.suspicious_count);
+		$('#unique-users .metric-value').text(data.unique_users);
+		$('#avg-anomaly .metric-value').text(data.avg_anomaly_score.toFixed(1));
 
-        // Render activity timeline
-        new frappe.Chart("#activity-timeline-chart", {
-            data: {
-                labels: data.timeline_labels,
-                datasets: [
-                    {
-                        name: "Normal",
-                        values: data.timeline_normal
-                    },
-                    {
-                        name: "Suspicious",
-                        values: data.timeline_suspicious
-                    }
-                ]
-            },
-            type: 'bar',
-            height: 250,
-            colors: ['#4CAF50', '#f44336']
-        });
+		// Render activity timeline
+		new frappe.Chart("#activity-timeline-chart", {
+			data: {
+				labels: data.timeline_labels,
+				datasets: [
+					{
+						name: "Normal",
+						values: data.timeline_normal
+					},
+					{
+						name: "Suspicious",
+						values: data.timeline_suspicious
+					}
+				]
+			},
+			type: 'bar',
+			height: 250,
+			colors: ['#4CAF50', '#f44336']
+		});
 
-        // Render top users
-        new frappe.Chart("#top-users-chart", {
-            data: {
-                labels: data.top_users_labels,
-                datasets: [{
-                    values: data.top_users_values
-                }]
-            },
-            type: 'pie',
-            height: 250,
-            colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
-        });
+		// Render top users
+		new frappe.Chart("#top-users-chart", {
+			data: {
+				labels: data.top_users_labels,
+				datasets: [{
+					values: data.top_users_values
+				}]
+			},
+			type: 'pie',
+			height: 250,
+			colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
+		});
 
-        // Render suspicious activities table
-        render_suspicious_table(data.suspicious_activities);
+		// Render suspicious activities table
+		render_suspicious_table(data.suspicious_activities);
 
-        // Render IP analysis
-        render_ip_analysis(data.top_ips);
+		// Render IP analysis
+		render_ip_analysis(data.top_ips);
 
-        // Render device analysis
-        render_device_analysis(data.device_stats);
-    }
+		// Render device analysis
+		render_device_analysis(data.device_stats);
+	}
 
-    function render_alerts(alerts) {
-        let html = '';
+	function render_alerts(alerts) {
+		let html = '';
 
-        alerts.forEach(alert => {
-            const type_class = alert.severity === 'critical' ? 'alert-critical' :
-                alert.severity === 'warning' ? 'alert-warning' : 'alert-info';
-            html += `
+		alerts.forEach(alert => {
+			const type_class = alert.severity === 'critical' ? 'alert-critical' :
+				alert.severity === 'warning' ? 'alert-warning' : 'alert-info';
+			html += `
 				<div class="alert-box ${type_class}">
 					<strong>${alert.title}</strong><br>
 					${alert.message}
 				</div>
 			`;
-        });
+		});
 
-        $('#alerts-section').html(html || '<p style="color: #10b981;">✓ No security alerts</p>');
-    }
+		$('#alerts-section').html(html || '<p style="color: #10b981;"><i class="fa fa-check"></i> No security alerts</p>');
+	}
 
-    function render_suspicious_table(activities) {
-        let html = `<table class="table table-bordered table-hover">
+	function render_suspicious_table(activities) {
+		let html = `<table class="table table-bordered table-hover">
 			<thead>
 				<tr>
 					<th>User</th>
@@ -268,10 +268,10 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 			</thead>
 			<tbody>`;
 
-        activities.forEach(activity => {
-            const score_color = activity.anomaly_score >= 75 ? 'red' :
-                activity.anomaly_score >= 50 ? 'orange' : 'yellow';
-            html += `
+		activities.forEach(activity => {
+			const score_color = activity.anomaly_score >= 75 ? 'red' :
+				activity.anomaly_score >= 50 ? 'orange' : 'yellow';
+			html += `
 				<tr>
 					<td>${activity.user}</td>
 					<td>${activity.doctype_revealed}</td>
@@ -281,17 +281,17 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 					<td style="font-size: 12px;">${activity.anomaly_reasons || 'N/A'}</td>
 				</tr>
 			`;
-        });
+		});
 
-        html += `</tbody></table>`;
-        $('#suspicious-activities-table').html(html);
-    }
+		html += `</tbody></table>`;
+		$('#suspicious-activities-table').html(html);
+	}
 
-    function render_ip_analysis(top_ips) {
-        let html = '<div style="max-height: 300px; overflow-y: auto;">';
+	function render_ip_analysis(top_ips) {
+		let html = '<div style="max-height: 300px; overflow-y: auto;">';
 
-        top_ips.forEach(ip => {
-            html += `
+		top_ips.forEach(ip => {
+			html += `
 				<div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
 					<div style="display: flex; justify-content: space-between;">
 						<code>${ip.ip_address}</code>
@@ -302,17 +302,17 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 					</div>
 				</div>
 			`;
-        });
+		});
 
-        html += '</div>';
-        $('#top-ips-list').html(html);
-    }
+		html += '</div>';
+		$('#top-ips-list').html(html);
+	}
 
-    function render_device_analysis(device_stats) {
-        let html = '<div style="max-height: 300px; overflow-y: auto;">';
+	function render_device_analysis(device_stats) {
+		let html = '<div style="max-height: 300px; overflow-y: auto;">';
 
-        device_stats.forEach(stat => {
-            html += `
+		device_stats.forEach(stat => {
+			html += `
 				<div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
 					<div style="display: flex; justify-content: space-between;">
 						<strong>${stat.device_type}</strong>
@@ -323,39 +323,39 @@ frappe.pages['security-dashboard'].on_page_load = function (wrapper) {
 					</div>
 				</div>
 			`;
-        });
+		});
 
-        html += '</div>';
-        $('#device-analysis-list').html(html);
-    }
+		html += '</div>';
+		$('#device-analysis-list').html(html);
+	}
 
-    function export_security_report() {
-        const time_range = page.fields_dict.time_range.get_value();
-        const days = get_days_from_range(time_range);
+	function export_security_report() {
+		const time_range = page.fields_dict.time_range.get_value();
+		const days = get_days_from_range(time_range);
 
-        frappe.call({
-            method: 'reveal_password.reveal_password.page.security_dashboard.security_dashboard.export_security_report',
-            args: { days: days },
-            callback: function (r) {
-                if (r.message) {
-                    // Download CSV
-                    const csv = r.message;
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `security_report_${frappe.datetime.now_date()}.csv`;
-                    a.click();
+		frappe.call({
+			method: 'reveal_password.reveal_password.page.security_dashboard.security_dashboard.export_security_report',
+			args: { days: days },
+			callback: function (r) {
+				if (r.message) {
+					// Download CSV
+					const csv = r.message;
+					const blob = new Blob([csv], { type: 'text/csv' });
+					const url = window.URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = `security_report_${frappe.datetime.now_date()}.csv`;
+					a.click();
 
-                    frappe.show_alert({
-                        message: __('Report exported successfully'),
-                        indicator: 'green'
-                    }, 3);
-                }
-            }
-        });
-    }
+					frappe.show_alert({
+						message: __('Report exported successfully'),
+						indicator: 'green'
+					}, 3);
+				}
+			}
+		});
+	}
 
-    // Initialize
-    load_dashboard();
+	// Initialize
+	load_dashboard();
 }

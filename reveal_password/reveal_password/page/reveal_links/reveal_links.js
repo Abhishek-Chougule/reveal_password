@@ -270,7 +270,7 @@ frappe.pages['reveal-links'].on_page_load = function (wrapper) {
                     fieldtype: 'HTML',
                     options: `
 						<div style="text-align: center; padding: 20px;">
-							<div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+							<div style="font-size: 48px; margin-bottom: 20px;"><i class="fa fa-check-circle" style="color: #4CAF50;"></i></div>
 							<h3>Link Created Successfully!</h3>
 							<p style="color: #64748b; margin: 20px 0;">Share this link to grant temporary access</p>
 							
@@ -292,7 +292,7 @@ frappe.pages['reveal-links'].on_page_load = function (wrapper) {
 							` : ''}
 							
 							<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: left;">
-								<strong>⚠️ Important:</strong>
+								<strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
 								<ul style="margin: 10px 0 0 20px; font-size: 14px;">
 									<li>Link expires: ${frappe.datetime.str_to_user(data.expires_at)}</li>
 									<li>Maximum uses: ${data.max_uses}</li>

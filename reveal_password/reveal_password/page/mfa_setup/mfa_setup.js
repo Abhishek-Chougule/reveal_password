@@ -1,16 +1,16 @@
 frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
-    let page = frappe.ui.make_app_page({
-        parent: wrapper,
-        title: 'Multi-Factor Authentication Setup',
-        single_column: true
-    });
+	let page = frappe.ui.make_app_page({
+		parent: wrapper,
+		title: 'Multi-Factor Authentication Setup',
+		single_column: true
+	});
 
-    let currentStep = 1;
-    let mfaData = {};
-    let backupCodes = [];
+	let currentStep = 1;
+	let mfaData = {};
+	let backupCodes = [];
 
-    // Main container
-    $(wrapper).find('.layout-main-section').append(`
+	// Main container
+	$(wrapper).find('.layout-main-section').append(`
 		<div class="mfa-setup-container" style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">
 			<div class="setup-progress" style="margin-bottom: 40px;">
 				<div class="progress-steps" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -53,8 +53,8 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 		</div>
 	`);
 
-    // Add custom CSS
-    frappe.dom.set_style(`
+	// Add custom CSS
+	frappe.dom.set_style(`
 		.step-number {
 			width: 40px;
 			height: 40px;
@@ -92,41 +92,41 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 		}
 	`);
 
-    function renderStep(step) {
-        currentStep = step;
-        updateProgress();
+	function renderStep(step) {
+		currentStep = step;
+		updateProgress();
 
-        const content = $('#setup-content');
-        content.empty();
+		const content = $('#setup-content');
+		content.empty();
 
-        switch (step) {
-            case 1:
-                renderIntroduction(content);
-                break;
-            case 2:
-                renderQRCode(content);
-                break;
-            case 3:
-                renderVerification(content);
-                break;
-            case 4:
-                renderBackupCodes(content);
-                break;
-            case 5:
-                renderCompletion(content);
-                break;
-        }
+		switch (step) {
+			case 1:
+				renderIntroduction(content);
+				break;
+			case 2:
+				renderQRCode(content);
+				break;
+			case 3:
+				renderVerification(content);
+				break;
+			case 4:
+				renderBackupCodes(content);
+				break;
+			case 5:
+				renderCompletion(content);
+				break;
+		}
 
-        // Update buttons
-        $('#btn-back').toggle(step > 1 && step < 5);
-        $('#btn-next').toggle(step < 5);
-        $('#btn-next').text(step === 4 ? 'Finish' : 'Next');
-    }
+		// Update buttons
+		$('#btn-back').toggle(step > 1 && step < 5);
+		$('#btn-next').toggle(step < 5);
+		$('#btn-next').text(step === 4 ? 'Finish' : 'Next');
+	}
 
-    function renderIntroduction(content) {
-        content.html(`
+	function renderIntroduction(content) {
+		content.html(`
 			<div style="text-align: center;">
-				<div style="font-size: 64px; margin-bottom: 20px;">🔐</div>
+				<div style="font-size: 64px; margin-bottom: 20px;"><i class="fa fa-lock" style="color: #4CAF50;"></i></div>
 				<h2>Secure Your Account with MFA</h2>
 				<p style="font-size: 16px; color: #64748b; max-width: 600px; margin: 20px auto;">
 					Multi-Factor Authentication adds an extra layer of security to your account by requiring
@@ -143,22 +143,22 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 				</div>
 				
 				<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 20px auto; max-width: 500px;">
-					<strong>⚠️ Important:</strong> Once enabled, you'll need your authenticator app to reveal passwords.
+					<strong><i class="fa fa-exclamation-triangle"></i> Important:</strong> Once enabled, you'll need your authenticator app to reveal passwords.
 					Make sure to save your backup codes in a safe place!
 				</div>
 			</div>
 		`);
-    }
+	}
 
-    function renderQRCode(content) {
-        content.html('<div style="text-align: center;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Generating QR Code...</p></div>');
+	function renderQRCode(content) {
+		content.html('<div style="text-align: center;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Generating QR Code...</p></div>');
 
-        frappe.call({
-            method: 'reveal_password.reveal_password.doctype.mfa_secret.mfa_secret.setup_mfa',
-            callback: function (r) {
-                if (r.message) {
-                    mfaData = r.message;
-                    content.html(`
+		frappe.call({
+			method: 'reveal_password.reveal_password.doctype.mfa_secret.mfa_secret.setup_mfa',
+			callback: function (r) {
+				if (r.message) {
+					mfaData = r.message;
+					content.html(`
 						<div style="text-align: center;">
 							<h3>Scan this QR Code</h3>
 							<p style="color: #64748b; margin-bottom: 30px;">
@@ -177,13 +177,13 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 							</div>
 						</div>
 					`);
-                }
-            }
-        });
-    }
+				}
+			}
+		});
+	}
 
-    function renderVerification(content) {
-        content.html(`
+	function renderVerification(content) {
+		content.html(`
 			<div style="text-align: center;">
 				<h3>Verify Your Setup</h3>
 				<p style="color: #64748b; margin-bottom: 30px;">
@@ -207,13 +207,13 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 			</div>
 		`);
 
-        $('#verification-code').on('input', function () {
-            $(this).val($(this).val().replace(/\D/g, ''));
-        });
-    }
+		$('#verification-code').on('input', function () {
+			$(this).val($(this).val().replace(/\D/g, ''));
+		});
+	}
 
-    function renderBackupCodes(content) {
-        content.html(`
+	function renderBackupCodes(content) {
+		content.html(`
 			<div style="text-align: center;">
 				<h3>Save Your Backup Codes</h3>
 				<p style="color: #64748b; margin-bottom: 30px;">
@@ -222,7 +222,7 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 				</p>
 				
 				<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 20px auto; max-width: 500px;">
-					<strong>⚠️ Important:</strong> Save these codes in a secure location. You won't be able to see them again!
+					<strong><i class="fa fa-exclamation-triangle"></i> Important:</strong> Save these codes in a secure location. You won't be able to see them again!
 				</div>
 				
 				<div id="backup-codes-list" style="max-width: 400px; margin: 30px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -237,12 +237,12 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 				</button>
 			</div>
 		`);
-    }
+	}
 
-    function renderCompletion(content) {
-        content.html(`
+	function renderCompletion(content) {
+		content.html(`
 			<div style="text-align: center;">
-				<div style="font-size: 64px; margin-bottom: 20px;">✅</div>
+				<div style="font-size: 64px; margin-bottom: 20px;"><i class="fa fa-check-circle" style="color: #4CAF50;"></i></div>
 				<h2>MFA Successfully Enabled!</h2>
 				<p style="font-size: 16px; color: #64748b; max-width: 600px; margin: 20px auto;">
 					Your account is now protected with Multi-Factor Authentication.
@@ -256,53 +256,53 @@ frappe.pages['mfa-setup'].on_page_load = function (wrapper) {
 				</div>
 			</div>
 		`);
-    }
+	}
 
-    function updateProgress() {
-        const progress = (currentStep / 5) * 100;
-        $('.progress-fill').css('width', progress + '%');
+	function updateProgress() {
+		const progress = (currentStep / 5) * 100;
+		$('.progress-fill').css('width', progress + '%');
 
-        $('.step-number').removeClass('active completed');
-        $(`.step[data-step="${currentStep}"] .step-number`).addClass('active');
+		$('.step-number').removeClass('active completed');
+		$(`.step[data-step="${currentStep}"] .step-number`).addClass('active');
 
-        for (let i = 1; i < currentStep; i++) {
-            $(`.step[data-step="${i}"] .step-number`).addClass('completed');
-        }
-    }
+		for (let i = 1; i < currentStep; i++) {
+			$(`.step[data-step="${i}"] .step-number`).addClass('completed');
+		}
+	}
 
-    $('#btn-next').on('click', function () {
-        if (currentStep === 3) {
-            // Verify token
-            const token = $('#verification-code').val();
-            if (token.length !== 6) {
-                $('#verification-error').text('Please enter a 6-digit code').show();
-                return;
-            }
+	$('#btn-next').on('click', function () {
+		if (currentStep === 3) {
+			// Verify token
+			const token = $('#verification-code').val();
+			if (token.length !== 6) {
+				$('#verification-error').text('Please enter a 6-digit code').show();
+				return;
+			}
 
-            $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Verifying...');
+			$(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Verifying...');
 
-            frappe.call({
-                method: 'reveal_password.reveal_password.doctype.mfa_secret.mfa_secret.enable_mfa',
-                args: { token: token },
-                callback: function (r) {
-                    if (r.message && r.message.success) {
-                        backupCodes = r.message.backup_codes;
-                        renderStep(currentStep + 1);
-                    } else {
-                        $('#verification-error').text('Invalid code. Please try again.').show();
-                    }
-                    $('#btn-next').prop('disabled', false).html('Next <i class="fa fa-arrow-right"></i>');
-                }
-            });
-        } else {
-            renderStep(currentStep + 1);
-        }
-    });
+			frappe.call({
+				method: 'reveal_password.reveal_password.doctype.mfa_secret.mfa_secret.enable_mfa',
+				args: { token: token },
+				callback: function (r) {
+					if (r.message && r.message.success) {
+						backupCodes = r.message.backup_codes;
+						renderStep(currentStep + 1);
+					} else {
+						$('#verification-error').text('Invalid code. Please try again.').show();
+					}
+					$('#btn-next').prop('disabled', false).html('Next <i class="fa fa-arrow-right"></i>');
+				}
+			});
+		} else {
+			renderStep(currentStep + 1);
+		}
+	});
 
-    $('#btn-back').on('click', function () {
-        renderStep(currentStep - 1);
-    });
+	$('#btn-back').on('click', function () {
+		renderStep(currentStep - 1);
+	});
 
-    // Initialize
-    renderStep(1);
+	// Initialize
+	renderStep(1);
 }

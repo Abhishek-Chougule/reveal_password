@@ -203,7 +203,7 @@ def alert_suspicious_activity(session):
 		if not settings.enable_notifications or not settings.notification_recipients:
 			return
 		
-		subject = f"⚠️ Suspicious Password Reveal Activity Detected"
+		subject = f"[WARNING] Suspicious Password Reveal Activity Detected"
 		message = f"""
 		<h3>Suspicious Activity Alert</h3>
 		<p>A potentially suspicious password reveal attempt has been detected:</p>
