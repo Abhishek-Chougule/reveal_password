@@ -464,7 +464,7 @@ def get_reveal_statistics(period: str = "monthly") -> dict:
 	Returns:
 		Dictionary with reveal statistics
 	"""
-	from frappe.utils import add_to_date, now_date, getdate
+	from frappe.utils import add_to_date, getdate, nowdate
 	
 	# Determine date range
 	if period == "daily":
@@ -474,7 +474,7 @@ def get_reveal_statistics(period: str = "monthly") -> dict:
 	else:
 		days = 30
 		
-	start_date = add_to_date(now_date(), days=-days)
+	start_date = add_to_date(nowdate(), days=-days)
 	
 	# 1. Basic Stats
 	total_reveals = frappe.db.count("Password Reveal Log", filters={"timestamp": [">=", start_date]})
@@ -501,7 +501,7 @@ def get_reveal_statistics(period: str = "monthly") -> dict:
 	
 	# Fill in missing dates
 	current_date = getdate(start_date)
-	end_date = getdate(now_date())
+	end_date = getdate(nowdate())
 	
 	date_map = {str(d.date): d.count for d in trend_data}
 	
