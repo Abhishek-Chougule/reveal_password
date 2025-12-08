@@ -143,15 +143,11 @@ class PasswordRevealManager {
 		const $controls = $(`
 			<div class="password-reveal-controls">
 				<button class="btn btn-xs btn-reveal" type="button" title="${__('Reveal Password (Ctrl+Shift+P)')}">
-					<svg class="icon icon-sm">
-						<use href="#icon-unhide"></use>
-					</svg>
+					<i class="fa fa-eye"></i>
 					<span class="btn-text">${__('Reveal')}</span>
 				</button>
 				<button class="btn btn-xs btn-copy" type="button" style="display: none;" title="${__('Copy to Clipboard')}">
-					<svg class="icon icon-sm">
-						<use href="#icon-copy"></use>
-					</svg>
+					<i class="fa fa-copy"></i>
 					<span class="btn-text">${__('Copy')}</span>
 				</button>
 				<div class="password-strength" style="display: none;">
@@ -295,10 +291,10 @@ class PasswordRevealManager {
 	 * Update button state
 	 */
 	updateButtonState($btn, isRevealed) {
-		const iconHref = isRevealed ? '#icon-hide' : '#icon-unhide';
+		const iconClass = isRevealed ? 'fa-eye-slash' : 'fa-eye';
 		const text = isRevealed ? __('Hide') : __('Reveal');
 
-		$btn.find('use').attr('href', iconHref);
+		$btn.find('i').attr('class', 'fa ' + iconClass);
 		$btn.find('.btn-text').text(text);
 		$btn.removeClass('btn-primary').addClass(isRevealed ? 'btn-secondary' : 'btn-primary');
 	}
