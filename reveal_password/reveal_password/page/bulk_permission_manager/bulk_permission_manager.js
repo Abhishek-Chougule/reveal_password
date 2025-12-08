@@ -95,11 +95,19 @@ frappe.pages['bulk-permission-manager'].on_page_load = function (wrapper) {
 
         // Load Roles
         frappe.call({
-            method: 'frappe.core.doctype.role.role.get_roles',
+            method: 'frappe.client.get_list',
+            args: {
+                doctype: 'Role',
+                fields: ['name'],
+                filters: {
+                    disabled: 0
+                },
+                limit_page_length: 0
+            },
             callback: function (r) {
                 if (r.message) {
                     r.message.forEach(role => {
-                        $('#filter-role').append(`<option value="${role}">${role}</option>`);
+                        $('#filter-role').append(`<option value="${role.name}">${role.name}</option>`);
                     });
                 }
             }

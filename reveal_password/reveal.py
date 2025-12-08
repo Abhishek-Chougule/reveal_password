@@ -485,7 +485,12 @@ def get_reveal_statistics(period: str = "monthly") -> dict:
 	if total_reveals > 0:
 		success_rate = round((successful_reveals / total_reveals) * 100, 1)
 		
-	active_users = frappe.db.count("Password Reveal Log", filters={"timestamp": [">=", start_date]}, distinct=True, pluck="user")
+	# Count distinct users
+	active_users = frappe.db.sql("""
+		SELECT COUNT(DISTINCT user)
+		FROM `tabPassword Reveal Log`
+		WHERE timestamp >= %s
+	""", (start_date,))[0][0] or 0
 	
 	# 2. Trend Data (Last 'days' days)
 	trend_data = frappe.db.sql("""
