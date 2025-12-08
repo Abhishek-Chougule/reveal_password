@@ -383,7 +383,7 @@ def verify_mfa_token(token: str, user: str = None) -> bool:
 		
 	Returns:
 		True if token is valid, False otherwise
-	
+	"""
 	try:
 		settings = frappe.get_single("Password Reveal Settings")
 		if not settings.enable_mfa:
